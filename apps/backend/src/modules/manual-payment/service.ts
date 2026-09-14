@@ -35,6 +35,16 @@ import type {
 class ManualPaymentProviderService extends AbstractPaymentProvider {
   static identifier = "manual-payment"
 
+  // AbstractPaymentProvider's constructor is typed protected upstream, so
+  // TS infers this class's implicit constructor as protected too and
+  // rejects it against ModuleProvider's public Constructor<any> type. An
+  // explicit public constructor (loosely typed args) fixes that.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(...args: any[]) {
+    // @ts-expect-error — see comment above
+    super(...args)
+  }
+
   async initiatePayment(
     _input: InitiatePaymentInput
   ): Promise<InitiatePaymentOutput> {
