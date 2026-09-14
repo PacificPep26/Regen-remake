@@ -17,36 +17,40 @@ currently WordPress + WooCommerce at `c:\Vu\Peptide\Regenx`, live at
 `regenxlabs.bio`) on **Next.js + Medusa v2**, in order to fully own the
 Stripe integration instead of depending on an external dev (Edwin/
 lunardigital) who gatekeeps a shared/pooled Stripe account on the WP site.
-Goal: eventually **replace** the WordPress site entirely. Design direction:
-**Luxury & High-End Wellness**, **Mobile-First**, 22+ age/compliance gate.
+Goal: eventually **replace** the WordPress site entirely. Design direction
+pivoted mid-build from "Luxury & High-End Wellness" to **Modern Clinical**
+(light/navy/crimson, data-forward, lab-dossier feel) per Vu's feedback.
+22+ age/compliance gate is live.
 
 **Nothing on the WordPress site is touched by this project** — it's a
 separate read-only reference (product data, business logic) for what to
 rebuild, browsed locally at `c:\Vu\Peptide\Regenx`.
 
 ⚠️ **Not the same project as `D:\victor\Web-product-project`** — that's an
-unrelated prior multi-niche dropshipping project (Casewin/Meridian
-Optic/Odd Shelf/Kesten) on the same machine, same `create-medusa-app`
-Turborepo template (hence identical `@dtc/*` package naming — coincidence
-of template reuse, not a shared codebase). Don't confuse the two; don't
-reuse its containers/ports.
+unrelated prior multi-niche dropshipping project on the same machine, same
+`create-medusa-app` Turborepo template (hence identical `@dtc/*` package
+naming — coincidence of template reuse, not a shared codebase). Don't
+confuse the two; don't reuse its containers/ports.
+
+GitHub: `github.com/PacificPep26/Regen-remake` (pushed, `main` branch).
 
 ---
 
 ## Where things live / URLs
 
-| | URL / path |
-|---|---|
-| Medusa Admin | http://localhost:9000/app |
-| Medusa API | http://localhost:9000 |
-| Storefront | **http://localhost:8000** (NOT 3000 — template default) |
-| Postgres (docker) | localhost:**5434** |
-| Redis (docker) | localhost:**6381** |
-| MinIO console/API (docker) | localhost:**9101** / **9102** (not wired into Medusa's File module yet — still local disk) |
-| Login credentials | `CREDENTIALS.local.txt` (gitignored, at project root) |
+| | Local | Railway (production) |
+|---|---|---|
+| Medusa Admin | http://localhost:9000/app | https://backend-pro.up.railway.app/app |
+| Medusa API | http://localhost:9000 | https://backend-pro.up.railway.app |
+| Storefront | http://localhost:8000 | https://regen-remake-production.up.railway.app (domain may get renamed — check the "Regen-remake" service's Networking tab for the current one) |
+| Postgres | localhost:5434 (docker) | Railway `Postgres` service — get `DATABASE_URL`/`DATABASE_PUBLIC_URL` from its Variables tab |
+| Redis | localhost:6381 (docker) | none yet — backend falls back to Medusa's in-memory event bus + fake redis, fine for current traffic level |
+| Login credentials | `CREDENTIALS.local.txt` (gitignored, project root) | same admin email/password (DB was restored from local dump) |
 
-Ports were deliberately chosen to NOT collide with `Web-product-project`'s
-containers (which use 5433/6379/9001/9002) in case both need to run at once.
+Railway project name: **captivating-surprise**. Two GitHub-connected
+services in it: **Backend** (Root Directory `apps/backend`) and
+**Regen-remake** (Root Directory `apps/storefront` — confusing name, it's
+actually the storefront service, not a repo-root service).
 
 ---
 
@@ -54,21 +58,19 @@ containers (which use 5433/6379/9001/9002) in case both need to run at once.
 
 | | Status |
 |---|---|
-| Repo/folder scaffold at `D:\victor\regenx-remake` (clean subfolder — `D:\victor` root itself has unrelated personal files, do not use directly) | ✅ |
-| `docker-compose.yml` — Postgres/Redis/MinIO on non-colliding ports | ✅ |
-| Medusa v2 backend scaffolded (`create-medusa-app`), migrated, seeded with **demo** data (not RegenX products yet) | ✅ |
-| Next.js storefront scaffolded (`nextjs-starter-medusa`), running against local backend | ✅ |
-| Fixed: directory nesting bug from `create-medusa-app` (it treats the passed path as a full Turborepo root, not a single-app folder — see Gotchas) | ✅ |
-| Fixed: duplicate/mismatched React versions (18 vs 19) across workspaces by switching npm → **pnpm** (see Gotchas) | ✅ |
-| Custom Admin "View Store" sidebar link (`src/admin/routes/view-store/page.tsx`) — Medusa has no built-in admin→storefront link (unlike wp-admin's "Visit Site") since it's headless | ✅ |
-| WooCommerce → JSON export script (`scripts/migration/export-from-wc.php`) — core product fields, categories, images, house-code/alias data | ✅ written, tested locally (36 products, 29 simple + 7 variable, 15 variations — counts match the live site) |
-| COA (Certificate of Analysis) data migration | ⬜ **deliberately deferred** — local DB's COA data is all placeholder/pending text anyway (not real lab results), and has pre-existing charset corruption (see Gotchas). Re-enter real COA data directly in the new admin once the `coa` module is built (Plan Phase 4). |
-| Import script (`scripts/migration/import-to-medusa.ts`) — products.json → Medusa Admin API | ⬜ not started |
-| Product categories (8), house-code masking module, compliance gate, payment providers (Stripe card first, then manual-QR suite), Shippo shipping, VIP billing | ⬜ not started — see the plan file's phases 1–8 |
+| Repo/folder scaffold, Docker infra, Medusa + Next.js scaffolded, npm→pnpm React-version fix | ✅ |
+| WooCommerce → JSON export + import into Medusa — **36/36 real products, 9 categories, real images byte-copied** | ✅ |
+| Storefront re-skinned end to end in Modern Clinical style (Nav, Hero, Footer, product cards, PDP, cart, search, side menu, trust bar, USA badge) | ✅ |
+| US region + Standard ($8)/Express ($25) shipping (placeholder rates — real Shippo integration is Phase 8, not done) | ✅ |
+| Payments: Stripe card provider registered (needs Vu's real `STRIPE_API_KEY`/`STRIPE_WEBHOOK_SECRET` — currently unset, provider auto-skips registration until then) + custom `manual-payment` module for **PayPal / Zelle / USDT** (real accounts from WalletUp, QR + address shown at checkout, staff confirm/capture manually in admin) | ✅ |
+| 22+ / RUO entry gate (`middleware.ts` + `/[countryCode]/gate`) — researcher type + 2 checkboxes, signed cookie, redirects back to the originally-requested page | ✅ |
+| Deployed to Railway (Backend + Storefront services + Postgres), local DB dumped and restored into Railway Postgres | ✅ (see Gotchas for the 3 build/runtime bugs that had to be fixed to get there) |
+| COA module, house-code/trademark-masking module, VIP subscription billing, real Shippo live-rate shipping | ⬜ not started |
+| Redirect-back-to-page after login/register | ⬜ not started |
 
 ---
 
-## Run it
+## Run it locally
 
 ```bash
 cd D:\victor\regenx-remake
@@ -85,81 +87,89 @@ pnpm run storefront:dev
 
 Admin login: see `CREDENTIALS.local.txt`.
 
-### Regenerate the WooCommerce product export
+### Dump/restore the local DB (used to seed Railway's Postgres)
 
 ```bash
-D:\xampp\php\php.exe D:\victor\regenx-remake\scripts\migration\export-from-wc.php > D:\victor\regenx-remake\scripts\migration\products.json
+docker exec regenx-remake-postgres-1 pg_dump -U medusa -d regenx_remake --no-owner --no-privileges -F c -f /tmp/regenx_remake.dump
+docker cp regenx-remake-postgres-1:/tmp/regenx_remake.dump ./regenx_remake.dump
+
+# restore into any Postgres (e.g. Railway's public proxy URL):
+docker run --rm -v "$(pwd)/regenx_remake.dump:/dump.dump" postgres:16-alpine \
+  pg_restore --no-owner --no-privileges --clean --if-exists -d "<DATABASE_URL>" /dump.dump
 ```
-Reads the **local** WordPress DB (`regenx_local`) read-only — safe to
-re-run anytime, touches nothing on the WP side.
+`regenx_remake.dump` is gitignored — don't commit it (contains real data).
 
 ---
 
-## Gotchas (learned the hard way, this session)
+## Gotchas (learned the hard way)
 
-- **`create-medusa-app <path>` treats `<path>` as a whole Turborepo root**,
-  not "install a backend app here" — passing `apps/backend` as the target
-  produced a nested `apps/backend/apps/backend` + `apps/backend/apps/storefront`
-  structure. Had to manually move the real backend/storefront up and the
-  wrapper's `node_modules`/`package.json`/`turbo.json`/etc. up to the true
-  project root. If re-scaffolding anything similar, pass the **project
-  root** as the target, not a sub-path.
-- **npm hoists a single React version across the whole workspace; pnpm
-  doesn't.** Medusa's admin dashboard needs React 18, the Next.js
-  storefront needs React 19 — under npm both got tangled into one hoisted
-  copy per package, causing `Uncaught Error: Objects are not valid as a
-  React child` (the classic dual-React-instance symptom) and a blank admin
-  page. Fixed by deleting all `node_modules` + `package-lock.json` and
-  reinstalling with **pnpm** (added `pnpm-workspace.yaml`, set
-  `packageManager: pnpm@12.3.4` in root `package.json`) — pnpm keeps each
-  workspace's own resolved versions properly isolated. Confirmed after fix:
-  backend resolves React 18.3.1, storefront resolves React 19.0.5,
-  independently, no more crash.
-- **pnpm's `ERR_PNPM_IGNORED_BUILDS`** — newer pnpm requires explicit
-  approval for dependencies with postinstall scripts. Added an
-  `allowBuilds:` block to `pnpm-workspace.yaml` (set to `true` for
-  `@medusajs/telemetry`, `@swc/core`, `esbuild`, `msgpackr-extract`,
-  `protobufjs`, `unrs-resolver` — all legitimate toolchain deps).
-- **Storefront runs on port 8000, not 3000** — the scaffolded
-  `nextjs-starter-medusa` here is configured `next dev --turbopack -p 8000`.
-  Don't assume 3000.
-- **Local DB's `_regenx_coa_records` has charset corruption** in some
-  placeholder text (an em-dash got double-UTF8-encoded at some point
-  pre-dating this project), which breaks PHP's strict-length
-  `unserialize()` and makes `get_post_meta()` silently return `false` for
-  affected products. Since all current COA data is confirmed placeholder/
-  pending anyway, the export script **skips COA entirely** rather than
-  fighting the corruption — real COA data gets entered fresh in the new
-  admin later.
+- **`create-medusa-app <path>` treats `<path>` as a whole Turborepo root** —
+  had to manually flatten the resulting nested structure. Pass the project
+  root, not a sub-path, if re-scaffolding anything similar.
+- **npm hoists one React version workspace-wide; pnpm doesn't.** Medusa
+  admin needs React 18, Next.js storefront needs React 19 — fixed by
+  switching the whole monorepo to pnpm.
+- **Storefront runs on port 8000, not 3000.**
+- **`medusa exec <script>` needs the dev servers stopped first** — it boots
+  its own instance and fights over the Redis/in-memory workflow lock
+  otherwise (`taskkill //F //IM node.exe` on Windows, then restart both
+  dev servers after).
+- **Docker Desktop doesn't auto-start** on this machine — launch manually
+  and poll `docker ps` before `docker compose up -d`.
 - **House-code slugs live on WooCommerce *variations*, not parent
-  products** — e.g. parent product `smg1`'s slug is just "smg1"; its
-  children are slugged `rp-100-10mg`/`rp-100-20mg` etc. (the actual
-  house-code strings). The export script checks variation slugs against
-  the redirect map, not the parent's slug — an earlier version of the
-  script checked only the parent and found zero masked products, which
-  was wrong.
-- **Docker Desktop doesn't auto-start** on this machine and isn't always
-  running — launch it manually (`"C:\Program Files\Docker\Docker\Docker
-  Desktop.exe"`) and poll `docker ps` until it responds (~5-15s) before
-  `docker compose up -d`.
-- **Killing node processes on Windows**: `taskkill //F //IM node.exe` (kills
-  ALL node processes — backend AND storefront both die, need to restart
-  both after).
+  products** — export script checks variation slugs against the redirect
+  map, not the parent's.
+- **Local DB's `_regenx_coa_records` has charset corruption** in
+  placeholder text — export skips COA entirely; real COA gets entered
+  fresh once the `coa` module exists (Phase 4).
+- **Custom payment providers need an explicit public constructor** —
+  `AbstractPaymentProvider`'s constructor is typed `protected`, so a
+  subclass with no explicit constructor gets inferred as `protected` too
+  and fails `ModuleProvider`'s `Constructor<any>` type check at build time
+  (`Cannot assign a 'protected' constructor type to a 'public' constructor
+  type`). Fix: add `constructor(...args: any[]) { super(...args) }`
+  explicitly (see `src/modules/manual-payment/service.ts`).
+- **Stripe's payment module crashes the *entire* Medusa server at boot**
+  if `apiKey` is an empty string (not just "Stripe won't work" — nothing
+  starts). `medusa-config.ts` only registers the Stripe provider when
+  `process.env.STRIPE_API_KEY` is actually set; add the real key to make
+  card payments live.
+- **Medusa's `medusa build` output must be deployed from `.medusa/server`,
+  not the source root** — `medusa start` run directly from
+  `apps/backend` can't find the built admin UI ("Could not find index.html
+  in the admin build directory"). Railway's Backend service Build Command
+  is `npm run build && cd .medusa/server && npm install`, Start Command is
+  `cd .medusa/server && npm run start`.
+- **`eslint-disable-next-line` referencing a rule that isn't in the
+  project's eslint config fails lint itself** ("Definition for rule ...
+  was not found") — `medusa build` runs lint as part of the build step, so
+  this broke the Railway build. Don't reference rules unless they're
+  actually configured.
+- **Next.js's `next start -p 8000` ignores Railway's assigned `PORT`** —
+  container was healthy/"Online" but Railway's proxy got 502
+  ("Application failed to respond") because it routes to `$PORT`, not
+  8000. Storefront's `start` script is now
+  `next start -p ${PORT:-8000}` (falls back to 8000 locally where `PORT`
+  isn't set).
+- **A Railway service's "Suggested Variables" list scans the whole repo**,
+  not just that service's Root Directory — don't blindly add everything
+  it suggests to the Backend service; the `NEXT_PUBLIC_*` ones belong to
+  the storefront service only.
 
 ---
 
 ## Next up
 
-1. Build `scripts/migration/import-to-medusa.ts` — read `products.json`,
-   create categories then products/variants via Medusa's Admin API,
-   byte-copy real image files (Vu's explicit "exact clone" requirement —
-   no placeholder/regenerated images or paraphrased titles).
-2. Before publishing anything live: **verify actual production publish/
-   draft status** for the 4 Bundle SKUs and the GLP-1 products (SMG1/TRZ2)
-   — local dev DB shows them all `publish`, but `CLAUDE.md` (WP project)
-   documents them as `draft` on production for trademark/compliance
-   reasons. Default every imported product to Medusa `draft` if unverified.
-3. Then continue the plan file's phases in order: storefront re-skin
-   (Luxury/Mobile-First) → compliance gate middleware → COA module →
-   house-code module → Stripe card payment (priority) → manual-QR payment
-   suite → VIP billing → Shippo shipping.
+1. Confirm the Railway storefront deploy is actually reachable end-to-end
+   (product browse → cart → checkout → payment) after the PORT fix.
+2. Set real domains: once both Railway services have stable public URLs,
+   update `NEXT_PUBLIC_BASE_URL` (storefront) and `STORE_CORS`/`ADMIN_CORS`/
+   `AUTH_CORS` (backend) from the temporary `*`/placeholder values to the
+   real ones.
+3. Add Vu's real `STRIPE_API_KEY`/`STRIPE_WEBHOOK_SECRET` once his own
+   Stripe account is ready — card payments go live automatically, no code
+   change needed.
+4. Continue the plan file's remaining phases: COA module → house-code
+   module → real Shippo shipping → VIP subscription billing.
+5. Redirect-back-to-page after login/register (`src/lib/data/customer.ts`
+   `completeLogin`) — requested but not yet implemented.
