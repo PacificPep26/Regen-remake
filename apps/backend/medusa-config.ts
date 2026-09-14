@@ -22,14 +22,21 @@ module.exports = defineConfig({
       resolve: "@medusajs/medusa/payment",
       options: {
         providers: [
-          {
-            resolve: "@medusajs/payment-stripe",
-            id: "stripe",
-            options: {
-              apiKey: process.env.STRIPE_API_KEY,
-              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-            },
-          },
+          // Stripe requires a real apiKey to even boot — skip registering
+          // it until Vu adds STRIPE_API_KEY, instead of crashing the whole
+          // server on an empty-string key.
+          ...(process.env.STRIPE_API_KEY
+            ? [
+                {
+                  resolve: "@medusajs/payment-stripe",
+                  id: "stripe",
+                  options: {
+                    apiKey: process.env.STRIPE_API_KEY,
+                    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+                  },
+                },
+              ]
+            : []),
           // Manual "pay outside Stripe" methods (Phase 6b) — real accounts
           // from Vu's current WalletUp Pro setup. Address/handle shown at
           // checkout is stored in `options.address`, read by the storefront
