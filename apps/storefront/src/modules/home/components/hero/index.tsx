@@ -1,5 +1,6 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import UsFlag from "@modules/common/icons/us-flag"
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 // A 2x2 collage of real product photos reads as "the full catalog" rather
 // than one arbitrary product — same idea as the original WordPress hero's
@@ -7,10 +8,10 @@ import UsFlag from "@modules/common/icons/us-flag"
 // dedicated hero photography later if Vu commissions a real studio shot;
 // this is a real-asset stand-in, not a placeholder/stock image.
 const HERO_COLLAGE = [
-  "http://localhost:9000/static/1789364985831-regenx-ref-p017.png", // Thymosin Alpha-1
-  "http://localhost:9000/static/1789364985841-regenx-ref-248-10mg.png", // SS-31
-  "http://localhost:9000/static/1789364985822-regenx-ref-p015.png", // Kisspeptin-10
-  "http://localhost:9000/static/1789364985846-regenx-ref-p013.png", // NAD+
+  `${MEDUSA_BACKEND_URL}/static/1789364985831-regenx-ref-p017.png`, // Thymosin Alpha-1
+  `${MEDUSA_BACKEND_URL}/static/1789364985841-regenx-ref-248-10mg.png`, // SS-31
+  `${MEDUSA_BACKEND_URL}/static/1789364985822-regenx-ref-p015.png`, // Kisspeptin-10
+  `${MEDUSA_BACKEND_URL}/static/1789364985846-regenx-ref-p013.png`, // NAD+
 ]
 
 /**
